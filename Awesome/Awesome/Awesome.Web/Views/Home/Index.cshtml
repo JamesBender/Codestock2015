@@ -1,0 +1,117 @@
+﻿@model IEnumerable<Awesome.Web.Models.ViewModels.Person>
+@{
+    ViewBag.Title = "Home Page";
+}
+<script type="text/javascript" language="javascript">
+    var url = "http://localhost:25281/api/Person"
+
+    function getPerson() {
+        var userId = $("#userIdToGet").val();
+        $.getJSON(url + "/" + userId, null,
+            function (data) {
+                $("#displayUserId").text("User Id: " + data.UserId);
+                $("#editUserId").val(data.UserId);
+                $("#editFirstName").val(data.FirstName);
+                $("#editLastName").val(data.LastName);
+                $("#userIdToGet").val("");
+            });
+    }
+
+    function savePerson() {
+        var firstName = $("#firstName").val();
+        var lastName = $("#lastName").val();
+
+        $.post(url, { FirstName: firstName, LastName: lastName },
+            function (data) {
+                resetPersonList();
+                $("#firstName").val("");
+                $("#lastName").val("");
+            })
+            .fail(function () { alert("failed"); });
+    }
+
+    function updatePerson() {
+        var userId = $("#editUserId").val();
+        var firstName = $("#editFirstName").val();
+        var lastName = $("#editLastName").val();
+
+        var test = JSON.stringify({ UserId: userId, FirstName: firstName, LastName: lastName });
+
+        $.ajax({
+            type: "PUT",
+            url: url + "/" + userId,
+            data: test,
+            contentType: "application/json",
+            dataType: "json",
+            success: function (data) {
+                
+                $("#editUserId").val("");
+                $("#editFirstName").val("");
+                $("#editLastName").val("");
+                resetPersonList();
+            }
+        });
+    }
+
+    function deletePerson() {
+        var userId = $("#userIdToDelete").val();
+
+        $.ajax({
+            type: "DELETE",
+            url: url + "/" + userId,
+            contentType: "application/json",
+            dataType: "json",
+            success: function (data) {
+                resetPersonList();
+                $("#userIdToDelete").val("");               
+            }
+        });
+    }
+
+    function resetPersonList() {
+        var personList = $("#personList");
+        
+        $.getJSON(url, null, function (data) {
+            var listOfPeople = "<ul>";
+            for (var idx = 0; idx < data.length; idx++) {
+                listOfPeople += "<li>" + data[idx].UserId + " - " + data[idx].LastName + ", " + data[idx].FirmName + "</li>";
+            }
+            listOfPeople += "</ul>";
+            personList.html(listOfPeople);
+        });        
+    }
+</script>
+<div class="hero-unit">
+    <h1>Super Awesome Person List 2000!</h1>
+</div>
+<div class="row" style="float: left; width:50%; padding-right: 20px;">
+    <p>
+        <h2>Current People:</h2>
+        <div id="personList">
+            <ul>
+                @foreach (var person in Model)
+                {
+                    <li>@person.UserId - @person.LastName, @person.FirstName</li>
+                }
+            </ul>
+        </div>
+    </p>
+    <hr />
+    <input type="text" id="userIdToGet" />
+    <button onclick="getPerson()">Get Person Details</button>
+    <br />
+    <label id="displayUserId" >User Id:</label><input type="hidden" id="editUserId"/><br />
+    <label id="displayFirstName" for="editFirstName">First Name:</label><input type="text" id="editFirstName" /><br />
+    <label id="displayLastName" for="editLastName">Last Name:</label><input type="text" id="editLastName" /><br/>
+    <button onclick="updatePerson()">Update Person</button>
+</div>
+<div>
+    <h2>New People</h2>
+    <label for="firstName">First Name:</label><input type="text" id="firstName" /><br />
+    <label for="lastName">Last Name:</label><input type="text" id="lastName" /><br />
+    <button onclick="savePerson()">Save Person</button><br />
+    <hr />
+    <h2>Delete People</h2>
+    <label for="userIdToDelete">User Id:</label><input type="text" id="userIdToDelete"/>
+    <button onclick="deletePerson()">Delete Person</button>
+</div>
